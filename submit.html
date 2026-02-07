@@ -3,216 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FlashAid – Submit Transfer</title>
-
-  <script src="https://cdn.worldcoin.org/minikit.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  <title>FlashAid - Submit Withdrawal</title>
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: #0a1f44;
-      color: #fff;
-      margin: 0;
+      color: #ffd966;
       padding: 20px;
+      max-width: 600px;
+      margin: auto;
     }
     h2 {
-      text-align: center;
       color: #ffae00;
+      text-align: center;
       margin-bottom: 20px;
     }
-    .card {
-      background: #132b5c;
-      padding: 20px;
-      border-radius: 14px;
-      max-width: 420px;
-      margin: auto;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-    }
     label {
-      font-size: 0.9rem;
-      margin-top: 12px;
       display: block;
-      color: #ffd966;
+      margin-top: 15px;
+      font-weight: bold;
     }
-    select, button {
+    select, input[type="number"], button {
       width: 100%;
       padding: 12px;
-      margin-top: 6px;
-      border-radius: 10px;
+      border-radius: 12px;
       border: none;
+      margin-top: 5px;
       font-size: 1rem;
     }
     button {
-      margin-top: 20px;
-      font-weight: bold;
       background: #ffae00;
       color: #0a1f44;
+      font-weight: bold;
+      margin-top: 25px;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    button:hover {
+      background: #ffd966;
     }
-    #loginBtn {
-      background: #4caf50;
-      margin-bottom: 20px;
+    #userIdDisplay {
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+      color: #ddd;
+      text-align: center;
     }
-    #status {
-      margin-top: 20px;
-      font-size: 1rem;
+    #statusMsg {
+      margin-top: 15px;
+      font-weight: bold;
       text-align: center;
     }
   </style>
 </head>
 <body>
 
-<h2>FlashAid Submit Transfer</h2>
+  <h2>FlashAid Withdrawal Request</h2>
+  <div id="userIdDisplay">Loading user info...</div>
 
-<div class="card">
-  <button id="loginBtn">Login with World ID</button>
-
-  <div id="userSection" style="display:none;">
-    <label>Select Asset</label>
-    <select id="asset">
-      <option value="">Choose asset</option>
-      <option value="WLD">WLD</option>
-      <option value="USDC">USDC</option>
+  <form id="withdrawalForm">
+    <label for="asset">Select Asset</label>
+    <select id="asset" required>
+      <option value="">-- Choose Asset --</option>
+      <option value="WLD">WLD (World Chain)</option>
+      <option value="USDC">USDC (World Chain)</option>
+      <option value="USDT">USDT (coming soon)</option>
+      <option value="Claims">Claims Token</option>
     </select>
 
-    <label>Select Amount</label>
-    <select id="amount" disabled>
-      <option value="">Choose amount</option>
-      <option value="1">1</option>
-      <option value="5">5</option>
-      <option value="10">10</option>
-      <option value="50">50</option>
-      <option value="100">100</option>
-      <option value="500">500</option>
-      <option value="1000">1000</option>
-      <option value="5000">5000</option>
-      <option value="8000">8000</option>
+    <label for="amount">Amount</label>
+    <input type="number" id="amount" min="1" step="any" placeholder="Enter amount" required />
+
+    <label for="payout">Payout Method</label>
+    <select id="payout" required>
+      <option value="">-- Choose Payout Method --</option>
+      <option value="Mpesa">Mpesa</option>
+      <option value="AirtelMoney">Airtel Money</option>
+      <option value="SafaricomAirtime">Safaricom Airtime</option>
+      <option value="OKX">OKX (USDC on Optimism)</option>
     </select>
 
-    <div class="fee-box" style="color:#ffd966; margin-top:10px;">
-      <div style="display:flex; justify-content:space-between;">
-        <span>Service Fee (2%)</span><span id="fee">0</span>
-      </div>
-      <div style="display:flex; justify-content:space-between;">
-        <span>Net Amount</span><span id="net">0</span>
-      </div>
-    </div>
+    <button type="submit">Submit Withdrawal</button>
+  </form>
 
-    <button id="payBtn" disabled>Confirm & Pay</button>
+  <div id="statusMsg"></div>
 
-    <div id="status"></div>
-  </div>
-</div>
-
-<script>
-  const SUPABASE_URL = "https://ieyqwynbiyypqdddkveq.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlleXF3eW5iaXl5cHFkZGRrdmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0OTgxMjAsImV4cCI6MjA4NjA3NDEyMH0._rrM0dgSMacKx_1qJBq6tP3lxmX7QDv7SHE_vpsZXuw";
-
-  const WLD_ADDRESS = "0x0f029f35a9da4043ff84b2c98a023d0a68eb64b4";
-  const USDC_ADDRESS = "0x6588e8765c495a9d44e93b0293aedd7ecd6167fc";
-
-  const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  const loginBtn = document.getElementById("loginBtn");
-  const userSection = document.getElementById("userSection");
-  const assetEl = document.getElementById("asset");
-  const amountEl = document.getElementById("amount");
-  const feeEl = document.getElementById("fee");
-  const netEl = document.getElementById("net");
-  const payBtn = document.getElementById("payBtn");
-  const statusDiv = document.getElementById("status");
-
-  let userId = null;
-
-  loginBtn.addEventListener("click", async () => {
-    try {
-      // World ID login
-      const result = await MiniKit.commandsAsync.auth();
-      userId = result.identity; // user’s unique world ID
-      
-      loginBtn.style.display = "none";
-      userSection.style.display = "block";
-      statusDiv.textContent = `Logged in as: ${userId}`;
-
-      amountEl.disabled = false;
-
-    } catch (error) {
-      alert("Login failed or cancelled.");
-    }
-  });
-
-  function updateFee() {
-    const amount = parseFloat(amountEl.value);
-    if (!amount) {
-      feeEl.textContent = "0";
-      netEl.textContent = "0";
-      payBtn.disabled = true;
-      return;
+  <script>
+    // Function to get user ID from URL
+    function getUserIdFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('user');
     }
 
-    const fee = amount * 0.02;
-    const net = amount - fee;
+    const userId = getUserIdFromURL();
+    const userIdDisplay = document.getElementById('userIdDisplay');
+    const statusMsg = document.getElementById('statusMsg');
+    const withdrawalForm = document.getElementById('withdrawalForm');
 
-    feeEl.textContent = fee.toFixed(2);
-    netEl.textContent = net.toFixed(2);
-
-    payBtn.disabled = !assetEl.value;
-  }
-
-  assetEl.addEventListener("change", updateFee);
-  amountEl.addEventListener("change", updateFee);
-
-  payBtn.addEventListener("click", async () => {
-    const asset = assetEl.value;
-    const amount = amountEl.value;
-
-    if (!asset || !amount) {
-      alert("Please select asset and amount.");
-      return;
+    if (userId) {
+      userIdDisplay.textContent = `Logged in as: ${userId}`;
+    } else {
+      userIdDisplay.textContent = "User not logged in. Please login first.";
+      withdrawalForm.style.display = 'none';
     }
 
-    const to = asset === "WLD" ? WLD_ADDRESS : USDC_ADDRESS;
+    withdrawalForm.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-    try {
-      await MiniKit.commandsAsync.pay({
-        asset,
-        amount,
-        to,
-        network: "worldchain"
-      });
+      // Gather form data
+      const asset = document.getElementById('asset').value;
+      const amount = document.getElementById('amount').value;
+      const payout = document.getElementById('payout').value;
 
-      // Save payment to Supabase
-      const { error } = await supabase
-        .from("payments")
-        .insert([
-          {
-            user_id: userId,
-            asset,
-            amount: parseFloat(amount),
-            status: "pending"
-          }
-        ]);
-
-      if (error) {
-        statusDiv.textContent = "Error saving payment: " + error.message;
+      if (!asset || !amount || !payout) {
+        statusMsg.textContent = "Please fill all fields.";
         return;
       }
 
-      statusDiv.textContent = "Payment submitted! Redirecting to status page...";
+      // Here you will handle sending the withdrawal request to your backend or DB
+      // For now, just simulate a submission:
+
+      statusMsg.textContent = "Submitting your withdrawal request...";
+
       setTimeout(() => {
-        window.location.href = "status.html";
+        statusMsg.textContent = `Request submitted! Asset: ${asset}, Amount: ${amount}, Payout: ${payout}`;
+        withdrawalForm.reset();
       }, 1500);
-
-    } catch (err) {
-      alert("Payment cancelled or failed.");
-    }
-  });
-</script>
-
+    });
+  </script>
 </body>
 </html>
