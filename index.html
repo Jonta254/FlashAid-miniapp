@@ -4,71 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FlashAid - Login</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0a1f44;
-      color: #ffd966;
-      margin: 0;
-      padding: 40px 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
-      text-align: center;
-    }
-    button {
-      background: #ffae00;
-      border: none;
-      padding: 18px 36px;
-      font-size: 1.3rem;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: bold;
-      color: #0a1f44;
-      transition: background 0.3s ease;
-      user-select: none;
-    }
-    button:hover {
-      background: #ffd966;
-    }
-    #statusMsg {
-      margin-top: 25px;
-      font-size: 1.1rem;
-      min-height: 28px;
-    }
-  </style>
+  <link rel="stylesheet" href="layout.css" />
 </head>
 <body>
-  <button id="loginBtn">Login with World ID</button>
-  <div id="statusMsg"></div>
+  <main>
+    <h1>Welcome to FlashAid</h1>
+    <p>Please login with your World ID to continue.</p>
+
+    <button id="loginBtn">Login with World ID</button>
+    <div id="statusMsg" role="alert" aria-live="polite"></div>
+  </main>
 
   <script src="https://cdn.worldcoin.org/minikit.js"></script>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const loginBtn = document.getElementById("loginBtn");
-      const statusMsg = document.getElementById("statusMsg");
-
-      loginBtn.addEventListener("click", async () => {
-        try {
-          statusMsg.textContent = "Waiting for login...";
-          const result = await MiniKit.commandsAsync.auth();
-          if (result && result.identity) {
-            statusMsg.textContent = "Login successful! Redirecting...";
-            window.location.href = `submit.html?user=${result.identity}`;
-          } else {
-            alert("Login failed: No identity returned.");
-            statusMsg.textContent = "";
-          }
-        } catch (error) {
-          console.error("Login error:", error);
-          alert("Login cancelled or failed. Please try again.");
-          statusMsg.textContent = "";
-        }
-      });
-    });
-  </script>
+  <script src="app.js" defer></script>
 </body>
 </html>
