@@ -88,7 +88,7 @@
   <div id="statusMsg"></div>
 
   <script>
-    // Function to get user ID from URL
+    // Get user ID from URL parameters
     function getUserIdFromURL() {
       const params = new URLSearchParams(window.location.search);
       return params.get('user');
@@ -109,9 +109,10 @@
     withdrawalForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
+      // Debug log
       console.log('Submit button pressed!');
 
-      // Gather form data
+      // Collect form data
       const asset = document.getElementById('asset').value;
       const amount = document.getElementById('amount').value;
       const payout = document.getElementById('payout').value;
@@ -121,9 +122,10 @@
         return;
       }
 
-      // Simulate submission (replace with backend call later)
+      // Show submitting status
       statusMsg.textContent = "Submitting your withdrawal request...";
 
+      // Simulate submission delay (replace with backend call)
       setTimeout(() => {
         statusMsg.textContent = `Request submitted! Asset: ${asset}, Amount: ${amount}, Payout: ${payout}`;
         withdrawalForm.reset();
