@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FlashAid – Submit Transfer</title>
 
+  <script src="https://cdn.worldcoin.org/minikit.js"></script>
+
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -36,7 +38,7 @@
       color: #ffd966;
     }
 
-    input, select {
+    select {
       width: 100%;
       padding: 12px;
       margin-top: 6px;
@@ -59,7 +61,7 @@
       margin: 6px 0;
     }
 
-    .submit-btn {
+    button {
       margin-top: 20px;
       width: 100%;
       padding: 14px;
@@ -72,104 +74,101 @@
       cursor: pointer;
     }
 
-    .submit-btn:disabled {
+    button:disabled {
       opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .okx-fields {
-      display: none;
-    }
-
-    .note {
-      font-size: 0.8rem;
-      margin-top: 10px;
-      color: #ccc;
-      text-align: center;
     }
   </style>
 </head>
 
 <body>
 
-  <h2>Submit Transfer</h2>
+<h2>Submit Transfer</h2>
 
-  <div class="card">
+<div class="card">
 
-    <label>Payout Method</label>
-    <select id="method">
-      <option value="">Select method</option>
-      <option value="mpesa">M-Pesa</option>
-      <option value="airtel">Airtel Money</option>
-      <option value="airtime">Safaricom Airtime</option>
-      <option value="okx">OKX (USDC)</option>
-    </select>
+  <label>Select Asset</label>
+  <select id="asset">
+    <option value="">Choose asset</option>
+    <option value="WLD">WLD</option>
+    <option value="USDC">USDC</option>
+  </select>
 
-    <label>Amount</label>
-    <input type="number" id="amount" placeholder="Enter amount" min="1" />
+  <label>Select Amount</label>
+  <select id="amount">
+    <option value="">Choose amount</option>
+    <option value="1">1</option>
+    <option value="5">5</option>
+    <option value="10">10</option>
+    <option value="50">50</option>
+    <option value="100">100</option>
+    <option value="500">500</option>
+    <option value="1000">1000</option>
+    <option value="5000">5000</option>
+    <option value="8000">8000</option>
+  </select>
 
-    <div class="fee-box">
-      <div><span>Fee (2%)</span><span id="fee">0</span></div>
-      <div><span>You receive</span><span id="receive">0</span></div>
-    </div>
-
-    <label>Phone number (Kenya)</label>
-    <input type="tel" id="phone" placeholder="07XXXXXXXX" />
-
-    <div class="okx-fields" id="okxFields">
-      <label>OKX USDC Address</label>
-      <input type="text" id="okxAddress" placeholder="Paste wallet address" />
-
-      <label>Network</label>
-      <input type="text" value="Optimism" disabled />
-    </div>
-
-    <label>Upload proof (optional)</label>
-    <input type="file" accept="image/*" />
-
-    <button class="submit-btn" id="submitBtn" disabled>
-      Submit Request
-    </button>
-
-    <div class="note">
-      After submission, your request will appear as <b>Pending</b>.
-    </div>
+  <div class="fee-box">
+    <div><span>Service Fee (2%)</span><span id="fee">0</span></div>
+    <div><span>Net Amount</span><span id="net">0</span></div>
   </div>
 
-  <script>
-    const amountInput = document.getElementById('amount');
-    const feeEl = document.getElementById('fee');
-    const receiveEl = document.getElementById('receive');
-    const submitBtn = document.getElementById('submitBtn');
-    const method = document.getElementById('method');
-    const okxFields = document.getElementById('okxFields');
+  <button id="payBtn" disabled>Confirm & Pay</button>
 
-    const FEE_RATE = 0.02;
+</div>
 
-    function updateFee() {
-      const amount = parseFloat(amountInput.value) || 0;
-      const fee = amount * FEE_RATE;
-      const receive = amount - fee;
+<script>
+  const assetEl = document.getElementById("asset");
+  const amountEl = document.getElementById("amount");
+  const feeEl = document.getElementById("fee");
+  const netEl = document.getElementById("net");
+  const payBtn = document.getElementById("payBtn");
 
-      feeEl.textContent = fee.toFixed(2);
-      receiveEl.textContent = receive.toFixed(2);
+  const FEE_RATE = 0.02;
 
-      submitBtn.disabled = amount <= 0 || method.value === '';
+  const WLD_ADDRESS = "0x0f029f35a9da4043ff84b2c98a023d0a68eb64b4";
+  const USDC_ADDRESS = "0x6588e8765c495a9d44e93b0293aedd7ecd6167fc";
+
+  function updateFee() {
+    const amount = parseFloat(amountEl.value);
+    if (!amount) return;
+
+    const fee = amount * FEE_RATE;
+    const net = amount - fee;
+
+    feeEl.textContent = fee.toFixed(2);
+    netEl.textContent = net.toFixed(2);
+
+    payBtn.disabled = !assetEl.value;
+  }
+
+  assetEl.addEventListener("change", updateFee);
+  amountEl.addEventListener("change", updateFee);
+
+  payBtn.addEventListener("click", async () => {
+    const asset = assetEl.value;
+    const amount = amountEl.value;
+
+    if (!asset || !amount) return;
+
+    const to =
+      asset === "WLD" ? WLD_ADDRESS : USDC_ADDRESS;
+
+    try {
+      await MiniKit.commandsAsync.pay({
+        asset,
+        amount,
+        to,
+        network: "worldchain"
+      });
+
+      // Redirect to status page after successful payment
+      window.location.href = "status.html";
+
+    } catch (err) {
+      alert("Payment cancelled or failed.");
     }
-
-    amountInput.addEventListener('input', updateFee);
-    method.addEventListener('change', () => {
-      okxFields.style.display = method.value === 'okx' ? 'block' : 'none';
-      updateFee();
-    });
-
-    submitBtn.addEventListener('click', () => {
-      // In future: send data to backend here
-
-      // Redirect user to status page
-      window.location.href = 'status.html';
-    });
-  </script>
+  });
+</script>
 
 </body>
 </html>
