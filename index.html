@@ -3,102 +3,99 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FlashAid - Fast Support for Verified Humans</title>
+  <title>FlashAid - Main Menu</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0; padding: 20px;
       background: #0a1f44;
       color: #fff;
-      text-align: center;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
     h1 {
       color: #ffae00;
+      margin-bottom: 40px;
+      text-align: center;
     }
-    button {
+    .btn {
       background: #ffae00;
       border: none;
       color: #0a1f44;
       font-weight: bold;
-      font-size: 1.1rem;
-      padding: 15px 25px;
-      margin: 10px;
-      border-radius: 8px;
+      font-size: 1.2rem;
+      padding: 20px 40px;
+      margin: 15px 0;
+      border-radius: 12px;
       cursor: pointer;
-      width: 200px;
+      width: 250px;
       transition: background 0.3s ease;
     }
-    button:hover {
+    .btn:hover {
       background: #ffa600cc;
     }
-    #mainMenu {
-      display: none;
-      margin-top: 30px;
-    }
-    #loginStatus {
-      margin-top: 20px;
+    #welcomeMsg {
+      margin-bottom: 30px;
       font-size: 1rem;
-      color: #ddd;
+      color: #ffd966;
+      text-align: center;
+      max-width: 320px;
     }
   </style>
-  <script src="https://cdn.worldcoin.org/minikit.min.js"></script>
 </head>
 <body>
-  <h1>FlashAid</h1>
-  <p>Fast, trusted support for verified humans.</p>
+  <h1>Welcome to FlashAid</h1>
+  <div id="welcomeMsg">Please log in with World ID to access the app features.</div>
+  <button id="btnSubmitTransfer" class="btn" disabled>Submit Transfer</button>
+  <button id="btnCheckStatus" class="btn" disabled>Check Status</button>
+  <button id="btnSupport" class="btn" disabled>Support & FAQ</button>
 
-  <div id="loginContainer">
-    <button id="worldIDLoginBtn">Login with World ID</button>
-    <p id="loginStatus"></p>
-  </div>
-
-  <div id="mainMenu">
-    <button id="btnSubmitTransfer">Submit Transfer</button>
-    <button id="btnCheckStatus">Check Status</button>
-    <button id="btnSupport">Support & FAQ</button>
-  </div>
-
+  <script src="https://cdn.worldcoin.org/minikit.js"></script>
   <script>
-    const loginBtn = document.getElementById('worldIDLoginBtn');
-    const loginStatus = document.getElementById('loginStatus');
-    const loginContainer = document.getElementById('loginContainer');
-    const mainMenu = document.getElementById('mainMenu');
+    const minikit = new window.MiniKit();
 
-    async function initWorldID() {
+    const welcomeMsg = document.getElementById('welcomeMsg');
+    const btnSubmit = document.getElementById('btnSubmitTransfer');
+    const btnStatus = document.getElementById('btnCheckStatus');
+    const btnSupport = document.getElementById('btnSupport');
+
+    // Replace with your FlashAid mini app ID
+    const miniAppId = 'app_a427563f57de1f2869e3a900500c405d';
+
+    async function init() {
       try {
-        const mk = new MiniKit.MiniKit({
-          app_id: "app_a427563f57de1f2869e3a900500c405d",
-        });
-
-        loginBtn.addEventListener('click', async () => {
-          loginStatus.textContent = "Opening World ID verification...";
-          try {
-            const proof = await mk.worldID.verify();
-            if (proof.verified) {
-              loginStatus.textContent = "✅ Verified! Welcome.";
-              loginContainer.style.display = 'none';
-              mainMenu.style.display = 'block';
-              // Save proof or user info here if needed
-            } else {
-              loginStatus.textContent = "Verification failed. Try again.";
-            }
-          } catch (e) {
-            loginStatus.textContent = "Verification canceled or failed.";
-          }
-        });
-      } catch (e) {
-        loginStatus.textContent = "Error initializing World ID.";
-        console.error(e);
+        const response = await minikit.commandsAsync.requestVerification({ app_id: miniAppId });
+        if (response.success) {
+          welcomeMsg.textContent = `Hello, verified user! You can now use the app.`;
+          btnSubmit.disabled = false;
+          btnStatus.disabled = false;
+          btnSupport.disabled = false;
+        } else {
+          welcomeMsg.textContent = 'Verification failed or cancelled. Please refresh and try again.';
+        }
+      } catch (error) {
+        welcomeMsg.textContent = 'Error during verification. Please refresh and try again.';
+        console.error(error);
       }
     }
 
-    initWorldID();
+    init();
 
-     document.getElementById('btnSubmitTransfer').onclick = () => {
-  window.location.href = 'submit.html';
-};
-    document.getElementById('btnCheckStatus').onclick = () => alert('Check Status page coming soon!');
-    document.getElementById('btnSupport').onclick = () => alert('Support & FAQ page coming soon!');
+    btnSubmit.onclick = () => {
+      window.location.href = 'submit.html';
+    };
+
+    btnStatus.onclick = () => {
+      window.location.href = 'status.html';
+    };
+
+    btnSupport.onclick = () => {
+      window.location.href = 'support.html';
+    };
   </script>
 </body>
 </html>
