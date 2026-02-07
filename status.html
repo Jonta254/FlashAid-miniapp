@@ -25,7 +25,7 @@
       background: #132b5c;
       padding: 20px;
       border-radius: 14px;
-      max-width: 480px;
+      max-width: 600px;
       margin: auto;
       box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     }
@@ -61,6 +61,24 @@
       color: #ffd966;
       text-align: center;
     }
+    #filterButtons {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    #filterButtons button {
+      background: #ffae00;
+      border: none;
+      margin: 0 5px;
+      padding: 8px 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #0a1f44;
+      transition: background 0.3s;
+    }
+    #filterButtons button.active {
+      background: #ffd966;
+    }
   </style>
 </head>
 <body>
@@ -70,6 +88,13 @@
 <div class="card">
   <button id="loginBtn">Login with World ID</button>
   <div id="statusMsg"></div>
+
+  <div id="filterButtons" style="display:none;">
+    <button data-filter="all" class="active">All</button>
+    <button data-filter="pending">Pending</button>
+    <button data-filter="completed">Completed</button>
+  </div>
+
   <table id="paymentsTable" style="display:none;">
     <thead>
       <tr>
@@ -93,8 +118,10 @@
   const statusMsg = document.getElementById("statusMsg");
   const paymentsTable = document.getElementById("paymentsTable");
   const paymentsBody = document.getElementById("paymentsBody");
+  const filterButtons = document.getElementById("filterButtons");
 
   let userId = null;
+  let paymentsData = [];
 
   loginBtn.addEventListener("click", async () => {
     try {
@@ -103,8 +130,10 @@
 
       loginBtn.style.display = "none";
       statusMsg.textContent = `Logged in as: ${userId}`;
+      filterButtons.style.display = "block";
 
-      fetchPayments();
+      await fetchPayments();
+      renderPayments("all");
     } catch (error) {
       alert("Login failed or cancelled.");
     }
@@ -122,17 +151,34 @@
       return;
     }
 
-    if (data.length === 0) {
-      statusMsg.textContent = "No payment requests found.";
+    paymentsData = data;
+    if (paymentsData.length === 0) {
       paymentsTable.style.display = "none";
+      statusMsg.textContent = "No payment requests found.";
+      filterButtons.style.display = "none";
       return;
     }
 
     paymentsTable.style.display = "table";
-    paymentsBody.innerHTML = "";
+    statusMsg.textContent = "";
+  }
 
-    data.forEach(payment => {
-      const tr = document.createElement('tr');
+  function renderPayments(filter) {
+    paymentsBody.innerHTML = "";
+    const filtered = paymentsData.filter(p => {
+      if (filter === "all") return true;
+      if (filter === "pending") return p.status.toLowerCase() === "pending";
+      if (filter === "completed") return p.status.toLowerCase() === "done" || p.status.toLowerCase() === "completed";
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      paymentsBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#ffae00;">No ${filter} payments found.</td></tr>`;
+      return;
+    }
+
+    filtered.forEach(payment => {
+      const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${payment.asset}</td>
         <td>${payment.amount}</td>
@@ -142,6 +188,17 @@
       paymentsBody.appendChild(tr);
     });
   }
+
+  filterButtons.addEventListener("click", e => {
+    if (e.target.tagName !== "BUTTON") return;
+
+    // Remove active class from all buttons
+    Array.from(filterButtons.children).forEach(btn => btn.classList.remove("active"));
+    // Add active class to clicked button
+    e.target.classList.add("active");
+
+    renderPayments(e.target.getAttribute("data-filter"));
+  });
 </script>
 
 </body>
