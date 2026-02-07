@@ -3,154 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FlashAid - Transfer Status</title>
+  <title>FlashAid – Payment Status</title>
+
+  <script src="https://cdn.worldcoin.org/minikit.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: #0a1f44;
       color: #fff;
-      margin: 0; padding: 20px;
-      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
     }
     h2 {
+      text-align: center;
       color: #ffae00;
       margin-bottom: 20px;
-      text-align: center;
     }
-    #requestsList {
-      max-width: 600px;
-      margin: 0 auto;
+    .card {
+      background: #132b5c;
+      padding: 20px;
+      border-radius: 14px;
+      max-width: 480px;
+      margin: auto;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     }
-    .request-item {
-      background: #112a66;
-      border-radius: 12px;
-      padding: 15px 20px;
-      margin-bottom: 15px;
-      box-shadow: 0 0 10px #ffae0050;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      color: #ffd966;
     }
-    .request-header {
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
-      margin-bottom: 8px;
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #254270;
+      text-align: left;
     }
-    .status {
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-weight: bold;
-      font-size: 0.85rem;
+    th {
+      background-color: #0f2859;
     }
-    .pending {
-      background: #f39c12;
-      color: #1c1c00;
-    }
-    .paid {
-      background: #2ecc71;
-      color: #0a1f44;
-    }
-    .rejected {
-      background: #e74c3c;
-      color: #fff;
-    }
-    .empty-msg {
-      text-align: center;
-      margin-top: 50px;
-      font-size: 1.2rem;
-      color: #ddd;
-    }
-    button {
-      background: #ffae00;
+    #loginBtn {
+      background: #4caf50;
+      width: 100%;
+      padding: 12px;
       border: none;
-      color: #0a1f44;
+      border-radius: 10px;
+      font-size: 1rem;
       font-weight: bold;
-      font-size: 1.1rem;
-      padding: 12px 25px;
-      margin: 20px auto;
-      border-radius: 8px;
       cursor: pointer;
-      display: block;
-      width: 180px;
-      transition: background 0.3s ease;
+      margin-bottom: 20px;
+      color: #0a1f44;
     }
-    button:hover {
-      background: #ffa600cc;
+    #statusMsg {
+      margin-top: 10px;
+      font-size: 1rem;
+      color: #ffd966;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h2>Transfer Status</h2>
-  <div id="requestsList">
-    <!-- Requests will be dynamically loaded here -->
-  </div>
 
-  <button onclick="goHome()">Back to Main Menu</button>
+<h2>FlashAid Payment Status</h2>
 
-  <script>
-    // Mock user requests data - replace with real data from backend later
-    const mockRequests = [
-      {
-        id: '1',
-        asset: 'WLD',
-        amount: 100,
-        payoutMethod: 'M-Pesa',
-        phone: '+254712345678',
-        status: 'pending',
-        requestedAt: '2026-02-05 14:30'
-      },
-      {
-        id: '2',
-        asset: 'USDC',
-        amount: 50,
-        payoutMethod: 'OKX',
-        phone: '0xYourOkxWalletAddressHere',
-        status: 'paid',
-        requestedAt: '2026-01-28 09:15'
-      },
-      {
-        id: '3',
-        asset: 'WLD',
-        amount: 30,
-        payoutMethod: 'Airtel Money',
-        phone: '+254798765432',
-        status: 'rejected',
-        requestedAt: '2026-01-20 18:00'
-      }
-    ];
+<div class="card">
+  <button id="loginBtn">Login with World ID</button>
+  <div id="statusMsg"></div>
+  <table id="paymentsTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>Asset</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Requested At</th>
+      </tr>
+    </thead>
+    <tbody id="paymentsBody"></tbody>
+  </table>
+</div>
 
-    function renderRequests() {
-      const container = document.getElementById('requestsList');
-      container.innerHTML = '';
+<script>
+  const SUPABASE_URL = "https://ieyqwynbiyypqdddkveq.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlleXF3eW5iaXl5cHFkZGRrdmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0OTgxMjAsImV4cCI6MjA4NjA3NDEyMH0._rrM0dgSMacKx_1qJBq6tP3lxmX7QDv7SHE_vpsZXuw";
 
-      if (mockRequests.length === 0) {
-        container.innerHTML = '<p class="empty-msg">No transfer requests found.</p>';
-        return;
-      }
+  const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      mockRequests.forEach(req => {
-        const div = document.createElement('div');
-        div.className = 'request-item';
+  const loginBtn = document.getElementById("loginBtn");
+  const statusMsg = document.getElementById("statusMsg");
+  const paymentsTable = document.getElementById("paymentsTable");
+  const paymentsBody = document.getElementById("paymentsBody");
 
-        const statusClass = req.status === 'pending' ? 'pending' : req.status === 'paid' ? 'paid' : 'rejected';
-        const statusText = req.status.charAt(0).toUpperCase() + req.status.slice(1);
+  let userId = null;
 
-        div.innerHTML = `
-          <div class="request-header">
-            <span>${req.asset} - ${req.amount}</span>
-            <span class="status ${statusClass}">${statusText}</span>
-          </div>
-          <div><strong>Payout:</strong> ${req.payoutMethod}</div>
-          <div><strong>Phone/Wallet:</strong> ${req.phone}</div>
-          <div><small>Requested At: ${req.requestedAt}</small></div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function goHome() {
-      window.location.href = 'index.html';
-    }
-
-    renderRequests();
-  </script>
-</body>
-</html>
+  loginBtn.addEventListener("click", async
