@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FlashAid - Login</title>
+  <title>FlashAid — Login</title>
   <link rel="stylesheet" href="layout.css" />
 </head>
 <body>
-  <main>
-    <h1>Welcome to FlashAid</h1>
-    <p>Please login with your World ID to continue.</p>
 
-    <button id="loginBtn">Login with World ID</button>
-    <div id="statusMsg" role="alert" aria-live="polite"></div>
-  </main>
+  <h1>Welcome to FlashAid</h1>
+  <button id="loginBtn">Login with World ID</button>
+  <div id="statusMsg"></div>
 
-  <script src="https://cdn.worldcoin.org/minikit.js"></script>
+  <!-- Load MiniKit from jsDelivr -->
+  <script type="module">
+    import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/+esm";
+    window.MiniKit = MiniKit;
+  </script>
+
   <script src="app.js" defer></script>
 </body>
 </html>
