@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FlashAid Admin Dashboard</title>
+
+  <script src="https://cdn.worldcoin.org/minikit.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a1f44;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #ffae00;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #132b5c;
+      padding: 20px;
+      border-radius: 14px;
+      max-width: 900px;
+      margin: auto;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      color: #ffd966;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #254270;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #0f2859;
+    }
+    button.action-btn {
+      background: #4caf50;
+      border: none;
+      padding: 7px 12px;
+      border-radius: 8px;
+      color: #0a1f44;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    button.action-btn:disabled {
+      background: #777;
+      cursor: not-allowed;
+    }
+    button.action-btn:hover:not(:disabled) {
+      background: #67d466;
+    }
+    #loginSection {
+      max-width: 400px;
+      margin: 20px auto;
+      background: #132b5c;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      text-align: center;
+    }
+    #loginInput {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+    #loginBtn {
+      background: #ffae00;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      font-weight: bold;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #0a1f44;
+    }
+    #loginBtn:hover {
+      background: #ffd966;
+    }
+    #errorMsg {
+      color: #ff4d4d;
+      margin-top: 10px;
+    }
+    #logoutBtn {
+      background: #ff4d4d;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #fff;
+      display: none;
+    }
+    #logoutBtn:hover {
+      background: #ff1a1a;
+    }
+  </style>
+</head>
+<body>
+
+<h2>FlashAid Admin Dashboard</h2>
+
+<div id="loginSection">
+  <input type="password" id="loginInput" placeholder="Enter admin password" />
+  <button id="loginBtn">Login</button>
+  <div id="errorMsg"></div>
+</div>
+
+<button id="logoutBtn">Logout</button>
+
+<div class="card" id="dashboard" style="display:none;">
+  <table>
+    <thead>
+      <tr>
+        <th>User ID</th>
+        <th>Asset</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Requested At</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="paymentsBody"></tbody>
+  </table>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://ieyqwynbiyypqdddkveq.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlleXF3eW5iaXl5cHFkZGRrdmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0OTgxMjAsImV4cCI6MjA4NjA3NDEyMH0._rrM0dgSMacKx_1qJBq6tP3lxmX7QDv7SHE_vpsZXuw";
+
+  const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const loginSection = document.getElementById("loginSection");
+  const loginInput = document.getElementById("loginInput");
+  const loginBtn = document.getElementById("loginBtn");
+  const errorMsg = document.getElementById("errorMsg");
+  const dashboard = document.getElementById("dashboard");
+  const paymentsBody = document.getElementById("paymentsBody");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  // Simple hardcoded admin password - replace with your own secure method
+  const ADMIN_PASSWORD = "FlashAidAdmin2026!";
+
+  let isLoggedIn = false;
+
+  loginBtn.addEventListener("click", () => {
+    const enteredPassword = loginInput.value.trim();
+    if (enteredPassword === ADMIN_PASSWORD) {
+      isLoggedIn = true;
+      loginSection.style.display = "none";
+      dashboard.style.display = "block";
+      logoutBtn.style.display = "inline-block";
+      errorMsg.textContent = "";
+      fetchPayments();
+    } else {
+      errorMsg.textContent = "Incorrect password, please try again.";
+    }
+  });
+
+  logoutBtn.addEventListener("click", () => {
+    isLoggedIn = false;
+    loginSection.style.display = "block";
+    dashboard.style.display = "none";
+    logoutBtn.style.display = "none";
+    loginInput.value = "";
+  });
+
+  async function fetchPayments() {
+    const { data, error } = await supabase
+      .from("payments")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      alert("Error fetching payments: " + error.message);
+      return;
+    }
+
+    renderPayments(data);
+  }
+
+  function renderPayments(payments) {
+    paymentsBody.innerHTML = "";
+
+    if (payments.length === 0) {
+      paymentsBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#ffae00;">No payment requests found.</td></tr>`;
+      return;
+    }
+
+    payments.forEach((payment) => {
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${payment.user_id}</td>
+        <td>${payment.asset}</td>
+        <td>${payment.amount}</td>
+        <td>${payment.status}</td>
+        <td>${new Date(payment.created_at).toLocaleString()}</td>
+        <td>
+          ${
+            payment.status.toLowerCase() === "pending"
+              ? `<button class="action-btn" data-id="${payment.id}">Mark Done</button>`
+              : `<span style="color:#67d466;font-weight:bold;">Completed</span>`
+          }
+        </td>
+      `;
+
+      paymentsBody.appendChild(tr);
+    });
+
+    // Add click listeners to all "Mark Done" buttons
+    document.querySelectorAll(".action-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const paymentId = e.target.getAttribute("data-id");
+        e.target.disabled = true;
+        e.target.textContent = "Updating...";
+
+        const { error } = await supabase
+          .from("payments")
+          .update({ status: "done" })
+          .eq("id", paymentId);
+
+        if (error) {
+          alert("Failed to update payment status: " + error.message);
+          e.target.disabled = false;
+          e.target.textContent = "Mark Done";
+        } else {
+          fetchPayments();
+        }
+      });
+    });
+  }
+</script>
+
+</body>
+</html>
