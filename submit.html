@@ -6,22 +6,21 @@
   <title>FlashAid – Submit Transfer</title>
 
   <script src="https://cdn.worldcoin.org/minikit.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: #0a1f44;
-      color: #ffffff;
+      color: #fff;
       margin: 0;
       padding: 20px;
     }
-
     h2 {
       text-align: center;
       color: #ffae00;
       margin-bottom: 20px;
     }
-
     .card {
       background: #132b5c;
       padding: 20px;
@@ -30,15 +29,13 @@
       margin: auto;
       box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     }
-
     label {
       font-size: 0.9rem;
       margin-top: 12px;
       display: block;
       color: #ffd966;
     }
-
-    select {
+    select, button {
       width: 100%;
       padding: 12px;
       margin-top: 6px;
@@ -46,93 +43,119 @@
       border: none;
       font-size: 1rem;
     }
-
-    .fee-box {
-      background: #0e2149;
-      padding: 12px;
-      border-radius: 10px;
-      margin-top: 15px;
-      font-size: 0.9rem;
-    }
-
-    .fee-box div {
-      display: flex;
-      justify-content: space-between;
-      margin: 6px 0;
-    }
-
     button {
       margin-top: 20px;
-      width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
-      font-size: 1.1rem;
       font-weight: bold;
       background: #ffae00;
       color: #0a1f44;
       cursor: pointer;
     }
-
     button:disabled {
       opacity: 0.6;
+      cursor: not-allowed;
+    }
+    #loginBtn {
+      background: #4caf50;
+      margin-bottom: 20px;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 1rem;
+      text-align: center;
     }
   </style>
 </head>
-
 <body>
 
-<h2>Submit Transfer</h2>
+<h2>FlashAid Submit Transfer</h2>
 
 <div class="card">
+  <button id="loginBtn">Login with World ID</button>
 
-  <label>Select Asset</label>
-  <select id="asset">
-    <option value="">Choose asset</option>
-    <option value="WLD">WLD</option>
-    <option value="USDC">USDC</option>
-  </select>
+  <div id="userSection" style="display:none;">
+    <label>Select Asset</label>
+    <select id="asset">
+      <option value="">Choose asset</option>
+      <option value="WLD">WLD</option>
+      <option value="USDC">USDC</option>
+    </select>
 
-  <label>Select Amount</label>
-  <select id="amount">
-    <option value="">Choose amount</option>
-    <option value="1">1</option>
-    <option value="5">5</option>
-    <option value="10">10</option>
-    <option value="50">50</option>
-    <option value="100">100</option>
-    <option value="500">500</option>
-    <option value="1000">1000</option>
-    <option value="5000">5000</option>
-    <option value="8000">8000</option>
-  </select>
+    <label>Select Amount</label>
+    <select id="amount" disabled>
+      <option value="">Choose amount</option>
+      <option value="1">1</option>
+      <option value="5">5</option>
+      <option value="10">10</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+      <option value="500">500</option>
+      <option value="1000">1000</option>
+      <option value="5000">5000</option>
+      <option value="8000">8000</option>
+    </select>
 
-  <div class="fee-box">
-    <div><span>Service Fee (2%)</span><span id="fee">0</span></div>
-    <div><span>Net Amount</span><span id="net">0</span></div>
+    <div class="fee-box" style="color:#ffd966; margin-top:10px;">
+      <div style="display:flex; justify-content:space-between;">
+        <span>Service Fee (2%)</span><span id="fee">0</span>
+      </div>
+      <div style="display:flex; justify-content:space-between;">
+        <span>Net Amount</span><span id="net">0</span>
+      </div>
+    </div>
+
+    <button id="payBtn" disabled>Confirm & Pay</button>
+
+    <div id="status"></div>
   </div>
-
-  <button id="payBtn" disabled>Confirm & Pay</button>
-
 </div>
 
 <script>
+  const SUPABASE_URL = "https://ieyqwynbiyypqdddkveq.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlleXF3eW5iaXl5cHFkZGRrdmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0OTgxMjAsImV4cCI6MjA4NjA3NDEyMH0._rrM0dgSMacKx_1qJBq6tP3lxmX7QDv7SHE_vpsZXuw";
+
+  const WLD_ADDRESS = "0x0f029f35a9da4043ff84b2c98a023d0a68eb64b4";
+  const USDC_ADDRESS = "0x6588e8765c495a9d44e93b0293aedd7ecd6167fc";
+
+  const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const loginBtn = document.getElementById("loginBtn");
+  const userSection = document.getElementById("userSection");
   const assetEl = document.getElementById("asset");
   const amountEl = document.getElementById("amount");
   const feeEl = document.getElementById("fee");
   const netEl = document.getElementById("net");
   const payBtn = document.getElementById("payBtn");
+  const statusDiv = document.getElementById("status");
 
-  const FEE_RATE = 0.02;
+  let userId = null;
 
-  const WLD_ADDRESS = "0x0f029f35a9da4043ff84b2c98a023d0a68eb64b4";
-  const USDC_ADDRESS = "0x6588e8765c495a9d44e93b0293aedd7ecd6167fc";
+  loginBtn.addEventListener("click", async () => {
+    try {
+      // World ID login
+      const result = await MiniKit.commandsAsync.auth();
+      userId = result.identity; // user’s unique world ID
+      
+      loginBtn.style.display = "none";
+      userSection.style.display = "block";
+      statusDiv.textContent = `Logged in as: ${userId}`;
+
+      amountEl.disabled = false;
+
+    } catch (error) {
+      alert("Login failed or cancelled.");
+    }
+  });
 
   function updateFee() {
     const amount = parseFloat(amountEl.value);
-    if (!amount) return;
+    if (!amount) {
+      feeEl.textContent = "0";
+      netEl.textContent = "0";
+      payBtn.disabled = true;
+      return;
+    }
 
-    const fee = amount * FEE_RATE;
+    const fee = amount * 0.02;
     const net = amount - fee;
 
     feeEl.textContent = fee.toFixed(2);
@@ -148,10 +171,12 @@
     const asset = assetEl.value;
     const amount = amountEl.value;
 
-    if (!asset || !amount) return;
+    if (!asset || !amount) {
+      alert("Please select asset and amount.");
+      return;
+    }
 
-    const to =
-      asset === "WLD" ? WLD_ADDRESS : USDC_ADDRESS;
+    const to = asset === "WLD" ? WLD_ADDRESS : USDC_ADDRESS;
 
     try {
       await MiniKit.commandsAsync.pay({
@@ -161,8 +186,27 @@
         network: "worldchain"
       });
 
-      // Redirect to status page after successful payment
-      window.location.href = "status.html";
+      // Save payment to Supabase
+      const { error } = await supabase
+        .from("payments")
+        .insert([
+          {
+            user_id: userId,
+            asset,
+            amount: parseFloat(amount),
+            status: "pending"
+          }
+        ]);
+
+      if (error) {
+        statusDiv.textContent = "Error saving payment: " + error.message;
+        return;
+      }
+
+      statusDiv.textContent = "Payment submitted! Redirecting to status page...";
+      setTimeout(() => {
+        window.location.href = "status.html";
+      }, 1500);
 
     } catch (err) {
       alert("Payment cancelled or failed.");
