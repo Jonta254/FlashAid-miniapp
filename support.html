@@ -3,94 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FlashAid - Support & FAQ</title>
+  <title>FlashAid – Support</title>
+
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: #0a1f44;
-      color: #fff;
-      margin: 0; padding: 20px;
-      min-height: 100vh;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
+      color: #ffffff;
+      margin: 0;
+      padding: 20px;
     }
+
     h2 {
+      text-align: center;
       color: #ffae00;
       margin-bottom: 20px;
-      text-align: center;
     }
-    details {
-      background: #112a66;
-      padding: 15px 20px;
-      border-radius: 12px;
-      margin-bottom: 15px;
-      box-shadow: 0 0 15px #ffae0050;
+
+    .card {
+      background: #132b5c;
+      padding: 20px;
+      border-radius: 14px;
+      max-width: 420px;
+      margin: auto;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     }
-    summary {
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 1.1rem;
-      outline: none;
+
+    .faq {
+      margin-bottom: 20px;
     }
-    p {
-      margin-top: 10px;
-      font-size: 1rem;
-      line-height: 1.5;
+
+    .faq h4 {
+      margin-bottom: 6px;
+      color: #ffd966;
     }
-    button {
-      background: #ffae00;
-      border: none;
-      color: #0a1f44;
-      font-weight: bold;
-      font-size: 1.1rem;
-      padding: 12px 25px;
-      margin: 30px auto 0;
-      border-radius: 8px;
-      cursor: pointer;
+
+    .faq p {
+      font-size: 0.9rem;
+      color: #ddd;
+      line-height: 1.4;
+    }
+
+    .support-btn {
       display: block;
-      width: 180px;
-      transition: background 0.3s ease;
+      text-align: center;
+      background: #ffae00;
+      color: #0a1f44;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 1.05rem;
+      text-decoration: none;
+      margin-top: 20px;
     }
-    button:hover {
-      background: #ffa600cc;
-    }
-  </style>
-</head>
-<body>
-  <h2>Support & FAQ</h2>
 
-  <details>
-    <summary>How do I submit a withdrawal request?</summary>
-    <p>Use the Submit Transfer page to fill in your withdrawal details and confirm the transfer was done.</p>
-  </details>
-
-  <details>
-    <summary>What payout methods are supported?</summary>
-    <p>M-Pesa, Safaricom Airtime, Airtel Money, and OKX crypto withdrawal.</p>
-  </details>
-
-  <details>
-    <summary>How long does it take to receive payment?</summary>
-    <p>Payments are processed as soon as possible after verification, usually within 24 hours.</p>
-  </details>
-
-  <details>
-    <summary>What if my transfer request is rejected?</summary>
-    <p>You will be notified with the reason. You can contact support for further help.</p>
-  </details>
-
-  <details>
-    <summary>How do I contact support?</summary>
-    <p>Call or WhatsApp: +254795621901</p>
-  </details>
-
-  <button onclick="goHome()">Back to Main Menu</button>
-
-  <script>
-    function goHome() {
-      window.location.href = 'index.html';
-    }
-  </script>
-</body>
-</html>
+    .note {
+      font-size: 0.8rem;
+      color: #ccc;
+      text-align: center;
+      margin
