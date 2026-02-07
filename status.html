@@ -96,4 +96,53 @@
 
   let userId = null;
 
-  loginBtn.addEventListener("click", async
+  loginBtn.addEventListener("click", async () => {
+    try {
+      const result = await MiniKit.commandsAsync.auth();
+      userId = result.identity;
+
+      loginBtn.style.display = "none";
+      statusMsg.textContent = `Logged in as: ${userId}`;
+
+      fetchPayments();
+    } catch (error) {
+      alert("Login failed or cancelled.");
+    }
+  });
+
+  async function fetchPayments() {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      statusMsg.textContent = "Error loading payments: " + error.message;
+      return;
+    }
+
+    if (data.length === 0) {
+      statusMsg.textContent = "No payment requests found.";
+      paymentsTable.style.display = "none";
+      return;
+    }
+
+    paymentsTable.style.display = "table";
+    paymentsBody.innerHTML = "";
+
+    data.forEach(payment => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${payment.asset}</td>
+        <td>${payment.amount}</td>
+        <td>${payment.status}</td>
+        <td>${new Date(payment.created_at).toLocaleString()}</td>
+      `;
+      paymentsBody.appendChild(tr);
+    });
+  }
+</script>
+
+</body>
+</html>
