@@ -109,6 +109,8 @@
     withdrawalForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
+      console.log('Submit button pressed!');
+
       // Gather form data
       const asset = document.getElementById('asset').value;
       const amount = document.getElementById('amount').value;
@@ -119,9 +121,7 @@
         return;
       }
 
-      // Here you will handle sending the withdrawal request to your backend or DB
-      // For now, just simulate a submission:
-
+      // Simulate submission (replace with backend call later)
       statusMsg.textContent = "Submitting your withdrawal request...";
 
       setTimeout(() => {
