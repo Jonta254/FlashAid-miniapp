@@ -41,26 +41,59 @@
   </style>
 </head>
 <body>
-  <button id="loginBtn">Login with World ID</button>
+  <button id="loginBtn">Login with World ID (opens new tab)</button>
   <div id="statusMsg"></div>
 
   <script src="https://cdn.worldcoin.org/minikit.js"></script>
 
   <script>
-    const loginBtn = document.getElementById("loginBtn");
-    const statusMsg = document.getElementById("statusMsg");
+    document.addEventListener("DOMContentLoaded", () => {
+      const loginBtn = document.getElementById("loginBtn");
+      const statusMsg = document.getElementById("statusMsg");
 
-    loginBtn.addEventListener("click", async () => {
-      try {
-        statusMsg.textContent = "Waiting for login...";
-        const result = await MiniKit.commandsAsync.auth();
-        statusMsg.textContent = "Login successful! Redirecting...";
-        // Redirect to submit page with user ID in URL
-        window.location.href = `submit.html?user=${result.identity}`;
-      } catch (error) {
-        statusMsg.textContent = "Login cancelled or failed. Please try again.";
-        console.error("World ID login error:", error);
-      }
+      loginBtn.addEventListener("click", () => {
+        statusMsg.textContent = "Opening login in new tab...";
+        // Open login in a new tab
+        const loginWindow = window.open("", "_blank");
+
+        if (!loginWindow) {
+          statusMsg.textContent = "Popup blocked! Please allow popups for this site.";
+          return;
+        }
+
+        // Write a basic HTML in new tab to load MiniKit and start login
+        loginWindow.document.write(`
+          <!DOCTYPE html>
+          <html lang="en">
+          <head><title>World ID Login</title></head>
+          <body style="font-family: system-ui, sans-serif; padding: 20px; text-align:center;">
+            <h2>Logging you in...</h2>
+            <p>Please wait while we authenticate your World ID.</p>
+            <div id="msg" style="margin-top:20px;"></div>
+            <script src="https://cdn.worldcoin.org/minikit.js"></script>
+            <script>
+              const msg = document.getElementById('msg');
+              MiniKit.commandsAsync.auth().then(result => {
+                msg.textContent = 'Login successful! Redirecting...';
+                window.opener.postMessage({ identity: result.identity }, '*');
+                setTimeout(() => window.close(), 1500);
+              }).catch(err => {
+                msg.textContent = 'Login failed or cancelled.';
+              });
+            </script>
+          </body>
+          </html>
+        `);
+      });
+
+      // Listen for messages from the login tab
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.identity) {
+          statusMsg.textContent = "Login successful! Redirecting...";
+          // Redirect on main page with user ID
+          window.location.href = `submit.html?user=${event.data.identity}`;
+        }
+      });
     });
   </script>
 </body>
