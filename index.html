@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FlashAid - Fast Support for Verified Humans</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 20px;
+      background: #0a1f44;
+      color: #fff;
+      text-align: center;
+    }
+    h1 {
+      color: #ffae00;
+    }
+    button {
+      background: #ffae00;
+      border: none;
+      color: #0a1f44;
+      font-weight: bold;
+      font-size: 1.1rem;
+      padding: 15px 25px;
+      margin: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 200px;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #ffa600cc;
+    }
+    #mainMenu {
+      display: none;
+      margin-top: 30px;
+    }
+    #loginStatus {
+      margin-top: 20px;
+      font-size: 1rem;
+      color: #ddd;
+    }
+  </style>
+  <script src="https://cdn.worldcoin.org/minikit.min.js"></script>
+</head>
+<body>
+  <h1>FlashAid</h1>
+  <p>Fast, trusted support for verified humans.</p>
+
+  <div id="loginContainer">
+    <button id="worldIDLoginBtn">Login with World ID</button>
+    <p id="loginStatus"></p>
+  </div>
+
+  <div id="mainMenu">
+    <button id="btnSubmitTransfer">Submit Transfer</button>
+    <button id="btnCheckStatus">Check Status</button>
+    <button id="btnSupport">Support & FAQ</button>
+  </div>
+
+  <script>
+    const loginBtn = document.getElementById('worldIDLoginBtn');
+    const loginStatus = document.getElementById('loginStatus');
+    const loginContainer = document.getElementById('loginContainer');
+    const mainMenu = document.getElementById('mainMenu');
+
+    async function initWorldID() {
+      try {
+        const mk = new MiniKit.MiniKit({
+          app_id: "app_a427563f57de1f2869e3a900500c405d",
+        });
+
+        loginBtn.addEventListener('click', async () => {
+          loginStatus.textContent = "Opening World ID verification...";
+          try {
+            const proof = await mk.worldID.verify();
+            if (proof.verified) {
+              loginStatus.textContent = "✅ Verified! Welcome.";
+              loginContainer.style.display = 'none';
+              mainMenu.style.display = 'block';
+              // Save proof or user info here if needed
+            } else {
+              loginStatus.textContent = "Verification failed. Try again.";
+            }
+          } catch (e) {
+            loginStatus.textContent = "Verification canceled or failed.";
+          }
+        });
+      } catch (e) {
+        loginStatus.textContent = "Error initializing World ID.";
+        console.error(e);
+      }
+    }
+
+    initWorldID();
+
+    document.getElementById('btnSubmitTransfer').onclick = () => alert('Submit Transfer page coming soon!');
+    document.getElementById('btnCheckStatus').onclick = () => alert('Check Status page coming soon!');
+    document.getElementById('btnSupport').onclick = () => alert('Support & FAQ page coming soon!');
+  </script>
+</body>
+</html>
