@@ -3,99 +3,68 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FlashAid - Main Menu</title>
+  <title>FlashAid - Login</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: #0a1f44;
-      color: #fff;
+      color: #ffd966;
       margin: 0;
-      padding: 20px;
+      padding: 40px 20px;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      box-sizing: border-box;
-    }
-    h1 {
-      color: #ffae00;
-      margin-bottom: 40px;
+      height: 100vh;
+      flex-direction: column;
       text-align: center;
     }
-    .btn {
+    button {
       background: #ffae00;
       border: none;
-      color: #0a1f44;
-      font-weight: bold;
+      padding: 15px 30px;
       font-size: 1.2rem;
-      padding: 20px 40px;
-      margin: 15px 0;
       border-radius: 12px;
       cursor: pointer;
-      width: 250px;
+      font-weight: bold;
+      color: #0a1f44;
       transition: background 0.3s ease;
     }
-    .btn:hover {
-      background: #ffa600cc;
+    button:hover {
+      background: #ffd966;
     }
-    #welcomeMsg {
+    h1 {
       margin-bottom: 30px;
-      font-size: 1rem;
-      color: #ffd966;
-      text-align: center;
-      max-width: 320px;
+      color: #ffae00;
+    }
+    #statusMsg {
+      margin-top: 20px;
+      font-size: 1.1rem;
+      min-height: 24px;
     }
   </style>
 </head>
 <body>
   <h1>Welcome to FlashAid</h1>
-  <div id="welcomeMsg">Please log in with World ID to access the app features.</div>
-  <button id="btnSubmitTransfer" class="btn" disabled>Submit Transfer</button>
-  <button id="btnCheckStatus" class="btn" disabled>Check Status</button>
-  <button id="btnSupport" class="btn" disabled>Support & FAQ</button>
+  <button id="loginBtn">Login with World ID</button>
+  <div id="statusMsg"></div>
 
   <script src="https://cdn.worldcoin.org/minikit.js"></script>
+
   <script>
-    const minikit = new window.MiniKit();
+    const loginBtn = document.getElementById("loginBtn");
+    const statusMsg = document.getElementById("statusMsg");
 
-    const welcomeMsg = document.getElementById('welcomeMsg');
-    const btnSubmit = document.getElementById('btnSubmitTransfer');
-    const btnStatus = document.getElementById('btnCheckStatus');
-    const btnSupport = document.getElementById('btnSupport');
-
-    // Replace with your FlashAid mini app ID
-    const miniAppId = 'app_a427563f57de1f2869e3a900500c405d';
-
-    async function init() {
+    loginBtn.addEventListener("click", async () => {
       try {
-        const response = await minikit.commandsAsync.requestVerification({ app_id: miniAppId });
-        if (response.success) {
-          welcomeMsg.textContent = `Hello, verified user! You can now use the app.`;
-          btnSubmit.disabled = false;
-          btnStatus.disabled = false;
-          btnSupport.disabled = false;
-        } else {
-          welcomeMsg.textContent = 'Verification failed or cancelled. Please refresh and try again.';
-        }
+        statusMsg.textContent = "Waiting for login...";
+        const result = await MiniKit.commandsAsync.auth();
+        statusMsg.textContent = `Logged in! Your World ID: ${result.identity}`;
+        // Redirect to submit page with user ID
+        window.location.href = "submit.html?user=" + result.identity;
       } catch (error) {
-        welcomeMsg.textContent = 'Error during verification. Please refresh and try again.';
-        console.error(error);
+        statusMsg.textContent = "Login cancelled or failed. Please try again.";
       }
-    }
-
-    init();
-
-    btnSubmit.onclick = () => {
-      window.location.href = 'submit.html';
-    };
-
-    btnStatus.onclick = () => {
-      window.location.href = 'status.html';
-    };
-
-    btnSupport.onclick = () => {
-      window.location.href = 'support.html';
-    };
+    });
   </script>
 </body>
 </html>
