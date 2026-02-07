@@ -30,6 +30,7 @@
       border: none;
       margin-top: 5px;
       font-size: 1rem;
+      box-sizing: border-box;
     }
     button {
       background: #ffae00;
@@ -47,11 +48,13 @@
       font-size: 0.9rem;
       color: #ddd;
       text-align: center;
+      word-break: break-word;
     }
     #statusMsg {
       margin-top: 15px;
       font-weight: bold;
       text-align: center;
+      min-height: 24px;
     }
   </style>
 </head>
@@ -88,48 +91,60 @@
   <div id="statusMsg"></div>
 
   <script>
-    // Get user ID from URL parameters
-    function getUserIdFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('user');
-    }
+    document.addEventListener("DOMContentLoaded", () => {
+      // Function to get query parameter by name
+      function getQueryParam(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
 
-    const userId = getUserIdFromURL();
-    const userIdDisplay = document.getElementById('userIdDisplay');
-    const statusMsg = document.getElementById('statusMsg');
-    const withdrawalForm = document.getElementById('withdrawalForm');
+      const userId = getQueryParam('user');
+      const userIdDisplay = document.getElementById('userIdDisplay');
+      const statusMsg = document.getElementById('statusMsg');
+      const withdrawalForm = document.getElementById('withdrawalForm');
 
-    if (userId) {
-      userIdDisplay.textContent = `Logged in as: ${userId}`;
-    } else {
-      userIdDisplay.textContent = "User not logged in. Please login first.";
-      withdrawalForm.style.display = 'none';
-    }
-
-    withdrawalForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      // Debug log
-      console.log('Submit button pressed!');
-
-      // Collect form data
-      const asset = document.getElementById('asset').value;
-      const amount = document.getElementById('amount').value;
-      const payout = document.getElementById('payout').value;
-
-      if (!asset || !amount || !payout) {
-        statusMsg.textContent = "Please fill all fields.";
+      if (userId) {
+        userIdDisplay.textContent = `Logged in as: ${userId}`;
+      } else {
+        userIdDisplay.textContent = "User not logged in. Please login first.";
+        withdrawalForm.style.display = 'none';
         return;
       }
 
-      // Show submitting status
-      statusMsg.textContent = "Submitting your withdrawal request...";
+      withdrawalForm.addEventListener('submit', (e) => {
+        e.preventDefault();
 
-      // Simulate submission delay (replace with backend call)
-      setTimeout(() => {
-        statusMsg.textContent = `Request submitted! Asset: ${asset}, Amount: ${amount}, Payout: ${payout}`;
-        withdrawalForm.reset();
-      }, 1500);
+        console.log('Submit button pressed!');
+
+        const asset = document.getElementById('asset').value;
+        const amount = document.getElementById('amount').value.trim();
+        const payout = document.getElementById('payout').value;
+
+        // Validate inputs
+        if (!asset) {
+          statusMsg.textContent = "Please select an asset.";
+          return;
+        }
+        if (!amount || isNaN(amount) || Number(amount) <= 0) {
+          statusMsg.textContent = "Please enter a valid amount.";
+          return;
+        }
+        if (!payout) {
+          statusMsg.textContent = "Please select a payout method.";
+          return;
+        }
+
+        // Show submitting message
+        statusMsg.textContent = "Submitting your withdrawal request...";
+
+        // Here you would call your backend API or DB to save the withdrawal request.
+        // For now, simulate with timeout:
+
+        setTimeout(() => {
+          statusMsg.textContent = `Request submitted! Asset: ${asset}, Amount: ${amount}, Payout: ${payout}`;
+          withdrawalForm.reset();
+        }, 1500);
+      });
     });
   </script>
 </body>
